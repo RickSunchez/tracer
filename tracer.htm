@@ -45,6 +45,13 @@
 		ctx.lineTo(ACTIVE_PT[0], ACTIVE_PT[1]);
 		ctx.stroke();
 	}
+
+	function _clear() {
+		ctx.clearRect(0,0,WIDTH,HEIGHT);
+		ACTIVE_PT = [10,10];
+		ctx.closePath();
+		ctx.beginPath();
+	}
 </script>
 <style type="text/css">
 	canvas {
@@ -73,3 +80,4 @@
 		<td></td>
 	</tr>
 </table>
+<button onclick="_clear();">Clear</button>
