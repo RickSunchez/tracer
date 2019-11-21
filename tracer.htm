@@ -1,0 +1,75 @@
+<script type="text/javascript">
+	let ctx, WIDTH, HEIGHT, 
+		COMMAND = "STOP", 
+		ACTIVE_PT = [10,10],
+		DX = 0, DY = 0, SPEED = 1;
+
+	window.onload = () => {
+		let canvas = document.getElementById("canvas");
+		WIDTH = canvas.width;
+		HEIGHT = canvas.height;
+
+		ctx = canvas.getContext("2d");
+
+		ctx.lineWidth = 5;
+		ctx.moveTo(ACTIVE_PT[0], ACTIVE_PT[1]);
+
+		setInterval(update, 10);
+	}
+
+	function update() {
+		if (COMMAND == "RIGHT") {
+			DX = SPEED;
+			DY = 0;
+		}
+		if (COMMAND == "LEFT") {
+			DX = -SPEED;
+			DY = 0;
+		}
+		if (COMMAND == "UP") {
+			DX = 0;
+			DY = -SPEED;
+		}
+		if (COMMAND == "DOWN") {
+			DX = 0;
+			DY = SPEED;
+		}
+		if (COMMAND == "STOP") {
+			DX = 0;
+			DY = 0;
+		}
+
+		ACTIVE_PT[0] += DX;
+		ACTIVE_PT[1] += DY;
+
+		ctx.lineTo(ACTIVE_PT[0], ACTIVE_PT[1]);
+		ctx.stroke();
+	}
+</script>
+<style type="text/css">
+	canvas {
+		float: left;
+	}
+	button {
+		width: 50px;
+		height: 50px;
+	}
+</style>
+<canvas width="500" height="500" id="canvas"></canvas>
+<table>
+	<tr>
+		<td></td>
+		<td><button onclick="COMMAND='UP'"></button></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><button onclick="COMMAND='LEFT'"></button></td>
+		<td><button onclick="COMMAND='STOP'"></button></td>
+		<td><button onclick="COMMAND='RIGHT'"></button></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td><button onclick="COMMAND='DOWN'"></button></td>
+		<td></td>
+	</tr>
+</table>
