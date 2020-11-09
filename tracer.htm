@@ -1,89 +1,232 @@
+<meta charset="utf-8">
 <script type="text/javascript">
-	let ctx, WIDTH, HEIGHT, 
-		COMMAND = "STOP", 
-		ACTIVE_PT = [10,10],
-		DX = 0, DY = 0, SPEED = 1;
+	var ctx, ACTIVE_PT = [10,10];
+		DX = 0, DY = 0, penUp = 0;
 
 	window.onload = () => {
 		let canvas = document.getElementById("canvas");
+		canvas.width = document.body.clientWidth;
+		canvas.height = document.body.clientHeight;
 		WIDTH = canvas.width;
 		HEIGHT = canvas.height;
 
 		ctx = canvas.getContext("2d");
 
+		for (btn of document.querySelectorAll("button")) {
+			btn.addEventListener("click", (ev) => {
+				let cmd = ev.target.getAttribute("cmd");
+
+				switch(cmd){
+					case "move":
+						let dir = ev.target.getAttribute("dir").split(",").map(el => {return +el;});
+						DX = dir[0];
+						DY = dir[1];
+						break;
+					case "penUp":
+						penUp = (penUp+1)%2;
+						break;
+					case "clear":
+						_clear();
+						break;
+				}
+			})
+		}
+
+		document.querySelector("#control input[type=range]").value = 1;
+		document.querySelector("#marker").style.left = ACTIVE_PT[0];
+		document.querySelector("#marker").style.top  = ACTIVE_PT[1];
+
+		ctx.beginPath();
 		ctx.lineWidth = 5;
-		ctx.moveTo(ACTIVE_PT[0], ACTIVE_PT[1]);
 
 		setInterval(update, 10);
 	}
 
 	function update() {
-		if (COMMAND == "RIGHT") {
-			DX = SPEED;
-			DY = 0;
-		}
-		if (COMMAND == "LEFT") {
-			DX = -SPEED;
-			DY = 0;
-		}
-		if (COMMAND == "UP") {
-			DX = 0;
-			DY = -SPEED;
-		}
-		if (COMMAND == "DOWN") {
-			DX = 0;
-			DY = SPEED;
-		}
-		if (COMMAND == "STOP") {
-			DX = 0;
-			DY = 0;
-		}
+		let speed = +document.querySelector("#control input[type=range]").value;
 
-		ACTIVE_PT[0] += DX;
-		ACTIVE_PT[1] += DY;
+		ctx.beginPath();
+		ctx.moveTo(ACTIVE_PT[0], ACTIVE_PT[1]);
+			if (ACTIVE_PT[0] + DX*speed > ctx.canvas.clientWidth) {
+				ctx.moveTo(0, ACTIVE_PT[1]);
+				ACTIVE_PT[0] = 0; }
+			else 
+			if (ACTIVE_PT[0] + DX*speed < 0){
+				ctx.moveTo(ctx.canvas.clientWidth, ACTIVE_PT[1]);
+				ACTIVE_PT[0] = ctx.canvas.clientWidth; }
+			else {
+				ACTIVE_PT[0] += DX*speed }
+			
+			if (ACTIVE_PT[1] + DY*speed > ctx.canvas.clientHeight) {
+				ctx.moveTo(ACTIVE_PT[0], 0);
+				ACTIVE_PT[1] = 0; }
+			else 
+			if (ACTIVE_PT[1] + DY*speed < 0){
+				ctx.moveTo(ACTIVE_PT[0], ctx.canvas.clientHeight);
+				ACTIVE_PT[1] = ctx.canvas.clientHeight; }
+			else {
+				ACTIVE_PT[1] += DY*speed }
 
-		ctx.lineTo(ACTIVE_PT[0], ACTIVE_PT[1]);
-		ctx.stroke();
+			if (!penUp) {
+				ctx.lineTo(ACTIVE_PT[0], ACTIVE_PT[1]);
+				ctx.stroke();
+			}
+		ctx.closePath();
+		document.querySelector("#marker").style.left = ACTIVE_PT[0];
+		document.querySelector("#marker").style.top  = ACTIVE_PT[1];
 	}
 
 	function _clear() {
-		ctx.clearRect(0,0,WIDTH,HEIGHT);
+		ctx.clearRect(0,0,ctx.canvas.clientWidth,ctx.canvas.clientHeight);
 		ACTIVE_PT = [10,10];
 		ctx.closePath();
 		ctx.beginPath();
 	}
 </script>
 <style type="text/css">
-	canvas {
-		float: left;
+	* {
+		margin: 0px;
+		padding: 0px;
+	}
+	body {
+		margin: 0px;
+		padding: 0px;
+		width: 100%;
+		height: 100vh;
+		overflow: hidden;
 	}
 	button {
 		width: 50px;
 		height: 50px;
 	}
+	#control {
+		position: absolute;
+		top: 50px;
+		left: calc(70%);
+		display: flex;
+		align-items: center;
+		flex-direction: column;
+		border: solid 1px #C7C7C7;
+		border-radius: 10px 10px 0px 0px;
+		padding: 0px 10px 10px 10px;
+		opacity: .3;
+		transition: opacity .8s;
+		overflow: hidden;
+		z-index: 9;
+	}
+	#controlheader {
+		content: "";
+		background-color: #C7C7C7;
+		width: calc(100% + 20px + 2px);
+		height: 30px;
+		margin-bottom: 10px;
+		cursor: move;
+		z-index: 10;
+	}
+	#control:hover {
+		opacity: 1;
+	}
+
+	#marker {
+		margin-top: -5px;
+		margin-left: -5px;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background-color: red;
+		z-index: 5;
+		position: absolute;
+		top: 0px;
+		left: 0px;
+	}
 </style>
-<canvas width="500" height="500" id="canvas"></canvas>
-<table>
-	<tr>
-		<td></td>
-		<td><button onclick="COMMAND='UP'"></button></td>
-		<td></td>
-	</tr>
-	<tr>
-		<td><button onclick="COMMAND='LEFT'"></button></td>
-		<td><button onclick="COMMAND='STOP'"></button></td>
-		<td><button onclick="COMMAND='RIGHT'"></button></td>
-	</tr>
-	<tr>
-		<td></td>
-		<td><button onclick="COMMAND='DOWN'"></button></td>
-		<td></td>
-	</tr>
-</table>
-<button onclick="_clear();">Clear</button>
-<input type="range" 
-	min="0.1" 
-	max="5" 
-	step="0.1" 
-	value="1"
-	oninput="SPEED= +this.value; this.nextSibling.innerText = this.value"><span>1</span>
+<canvas id="canvas"></canvas>
+<div id="marker"></div>
+<div id="control">
+	<div id="controlheader"></div>
+	<table>
+		<tr>
+			<td><button cmd="clear">&#10060;</button></td>
+			<td><button cmd="move" dir="0,-1">&#9650;</button></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td><button cmd="move" dir="-1,0">&#9664;</button></td>
+			<td><button cmd="move" dir="0,0">&#9209;</button></td>
+			<td><button cmd="move" dir="1,0">&#9654;</button></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td><button cmd="move" dir="0,1">&#9660;</button></td>
+			<td><button cmd="penUp">&#128395;</button></td>
+		</tr>
+	</table>
+	<input type="range" 
+		min="0.1" 
+		max="5" 
+		step="0.1" 
+		value="1"
+		oninput="
+			this
+				.nextElementSibling
+				.children[0]
+				.innerText = this.value;
+		"
+	>
+	<div>speed: <span>1</span></div>
+</div>
+
+<script type="text/javascript">
+	function makeElemDD(selector) {
+		var nodes = document.querySelectorAll(selector);
+		var dx = 0, dy = 0, node;
+		var W = document.body.clientWidth,
+			H = document.body.clientHeight;
+
+		for (n of nodes) {
+			let onDD = n.children[0];
+			onDD.onmousedown = move_start;
+		}
+		
+		function move_start(ev) {
+			node = ev.target.parentNode;
+			dx = node.offsetLeft - ev.clientX;
+			dy = node.offsetTop  - ev.clientY;
+
+			document.onmouseup   = move_end;
+			document.onmousemove = move_onair;
+		}
+
+		function move_onair(ev) {
+			let x = ev.clientX + dx,
+				y = ev.clientY + dy,
+				stick = 10;
+			let r = node.offsetLeft + node.clientWidth,
+				l = node.offsetLeft;
+			
+			if ( (r+stick*2) > W && ev.clientX > l ) {
+				x = W - node.clientWidth - stick; }
+			if ( (l-stick*2) < 0 && ev.clientX < node.clientWidth ) {
+				x = stick; }
+
+			let b = node.offsetTop + node.clientHeight,
+				t = node.offsetTop;
+
+			if ( (b+stick*2) > H && ev.clientY > t ) {
+				y = H - node.clientHeight - stick; }
+			if ( (t-stick*2) < 0 && ev.clientY < node.clientHeight ) {
+				y = stick; }
+			
+
+			node.style.left = x + "px";
+			node.style.top  = y + "px";
+		}
+
+		function move_end(ev) {
+			document.onmouseup = null;
+			document.onmousemove = null;
+		}
+	}
+
+	makeElemDD("#control");
+</script>
