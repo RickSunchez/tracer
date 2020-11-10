@@ -7,8 +7,6 @@
 		let canvas = document.getElementById("canvas");
 		canvas.width = document.body.clientWidth;
 		canvas.height = document.body.clientHeight;
-		WIDTH = canvas.width;
-		HEIGHT = canvas.height;
 
 		ctx = canvas.getContext("2d");
 
@@ -24,6 +22,9 @@
 						break;
 					case "penUp":
 						penUp = (penUp+1)%2;
+						document
+							.querySelector("button[cmd=penUp]")
+							.classList.toggle("off");
 						break;
 					case "clear":
 						_clear();
@@ -46,32 +47,26 @@
 		let speed = +document.querySelector("#control input[type=range]").value;
 
 		ctx.beginPath();
-		ctx.moveTo(ACTIVE_PT[0], ACTIVE_PT[1]);
-			if (ACTIVE_PT[0] + DX*speed > ctx.canvas.clientWidth) {
-				ctx.moveTo(0, ACTIVE_PT[1]);
-				ACTIVE_PT[0] = 0; }
-			else 
-			if (ACTIVE_PT[0] + DX*speed < 0){
-				ctx.moveTo(ctx.canvas.clientWidth, ACTIVE_PT[1]);
-				ACTIVE_PT[0] = ctx.canvas.clientWidth; }
-			else {
-				ACTIVE_PT[0] += DX*speed }
-			
-			if (ACTIVE_PT[1] + DY*speed > ctx.canvas.clientHeight) {
-				ctx.moveTo(ACTIVE_PT[0], 0);
-				ACTIVE_PT[1] = 0; }
-			else 
-			if (ACTIVE_PT[1] + DY*speed < 0){
-				ctx.moveTo(ACTIVE_PT[0], ctx.canvas.clientHeight);
-				ACTIVE_PT[1] = ctx.canvas.clientHeight; }
-			else {
-				ACTIVE_PT[1] += DY*speed }
+			ctx.arc(ACTIVE_PT[0], ACTIVE_PT[1],
+				 2.5, 0, 2*Math.PI,
+				 true);
 
-			if (!penUp) {
-				ctx.lineTo(ACTIVE_PT[0], ACTIVE_PT[1]);
-				ctx.stroke();
-			}
+			if (!penUp) ctx.fill();
+
+			ACTIVE_PT[0] = (ACTIVE_PT[0]+DX*speed < 0)
+				? ctx.canvas.offsetWidth
+				: (ACTIVE_PT[0]+DX*speed > ctx.canvas.offsetWidth)
+					? 0
+					: ACTIVE_PT[0]+DX*speed;
+
+			ACTIVE_PT[1] = (ACTIVE_PT[1]+DY*speed < 0)
+				? ctx.canvas.offsetHeight
+				: (ACTIVE_PT[1]+DY*speed > ctx.canvas.offsetHeight)
+					? 0
+					: ACTIVE_PT[1]+DY*speed;
+
 		ctx.closePath();
+
 		document.querySelector("#marker").style.left = ACTIVE_PT[0];
 		document.querySelector("#marker").style.top  = ACTIVE_PT[1];
 	}
@@ -81,6 +76,32 @@
 		ACTIVE_PT = [10,10];
 		ctx.closePath();
 		ctx.beginPath();
+	}
+
+	var keyMap = [
+		[81,87,69],
+		[65,32,68],
+		[-1,83,-1]
+	];
+	window.onkeydown = (ev) => {
+		var coords;
+		keyMap.forEach((row, i) => {
+			if ( row.indexOf(ev.keyCode) >= 0 ) { 
+				coords = [i, row.indexOf(ev.keyCode)];
+			}
+		})
+
+		if (coords) {
+			console.log(
+			document
+				.querySelector("#control table")
+				.children[0]
+				.children[coords[0]]
+				.children[coords[1]]
+				.querySelector("button")
+				.click()
+			)
+		}
 	}
 </script>
 <style type="text/css">
@@ -127,6 +148,18 @@
 		opacity: 1;
 	}
 
+	#control button {
+		position: relative;
+	}
+	#control button:after {
+		content: attr(key);
+		position: absolute;
+		top: -8px;
+		left: -20px;
+		display: block;
+		border: solid 1px grey;
+		background-color: white;
+	}
 	#marker {
 		margin-top: -5px;
 		margin-left: -5px;
@@ -139,6 +172,13 @@
 		top: 0px;
 		left: 0px;
 	}
+
+	button[cmd=penUp]:before {
+		content: "🖋";
+	}
+	button[cmd=penUp].off:before {
+		content: "";
+	}
 </style>
 <canvas id="canvas"></canvas>
 <div id="marker"></div>
@@ -146,19 +186,19 @@
 	<div id="controlheader"></div>
 	<table>
 		<tr>
-			<td><button cmd="clear">&#10060;</button></td>
-			<td><button cmd="move" dir="0,-1">&#9650;</button></td>
-			<td></td>
+			<td><button cmd="clear" key="Q">&#10060;</button></td>
+			<td><button cmd="move"  key="W" dir="0,-1">&#9650;</button></td>
+			<td><button cmd="penUp" key="E"></button></td>
 		</tr>
 		<tr>
-			<td><button cmd="move" dir="-1,0">&#9664;</button></td>
-			<td><button cmd="move" dir="0,0">&#9209;</button></td>
-			<td><button cmd="move" dir="1,0">&#9654;</button></td>
+			<td><button cmd="move" key="A" dir="-1,0">&#9664;</button></td>
+			<td><button cmd="move" key="Space" dir="0,0">&#9209;</button></td>
+			<td><button cmd="move" key="D" dir="1,0">&#9654;</button></td>
 		</tr>
 		<tr>
 			<td></td>
-			<td><button cmd="move" dir="0,1">&#9660;</button></td>
-			<td><button cmd="penUp">&#128395;</button></td>
+			<td><button cmd="move" key="S" dir="0,1">&#9660;</button></td>
+			<td></td>
 		</tr>
 	</table>
 	<input type="range" 
